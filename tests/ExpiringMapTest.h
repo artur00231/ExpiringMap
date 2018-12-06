@@ -117,6 +117,66 @@ TEST(ExpiringMap, get)
 	EXPECT_EQ(x.has_value(), false);
 }
 
+TEST(ExpiringMap, at1)
+{
+	using namespace std::chrono_literals;
+
+	ExpiringMap<int, int> db{ 10h };
+
+	db.insert(10, 45);
+
+	auto x = db.at(10);
+	EXPECT_EQ(x, 45);
+
+	EXPECT_THROW(db.at(25), std::out_of_range);
+
+	try {
+		x = db.at(25);
+	}
+	catch (const std::out_of_range & out)
+	{
+		EXPECT_EQ(std::strcmp(out.what(), "ExpiringMap: key doesn't exist"), 0);
+	}
+}
+
+TEST(ExpiringMap, at2)
+{
+	using namespace std::chrono_literals;
+
+	ExpiringMap<int, int> db{ 10h };
+
+	db.insert(10, 45);
+
+	auto x = db[10];
+	EXPECT_EQ(x, 45);
+
+	EXPECT_THROW(db[25], std::out_of_range);
+
+	try {
+		x = db[25];
+	}
+	catch (const std::out_of_range & out)
+	{
+		EXPECT_EQ(std::strcmp(out.what(), "ExpiringMap: key doesn't exist"), 0);
+	}
+}
+
+TEST(ExpiringMap, erase)
+{
+	using namespace std::chrono_literals;
+
+	ExpiringMap<int, int> db{ 10h };
+
+	db.insert(10, 45);
+
+	auto x = db[10];
+	EXPECT_EQ(x, 45);
+
+	db.erase(10);
+
+	EXPECT_THROW(db[10], std::out_of_range);
+}
+
 TEST(ExpiringMap, data_live_time1)
 {
 	using namespace std::chrono_literals;

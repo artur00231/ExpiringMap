@@ -52,7 +52,10 @@ public:
 	bool assign_emplace(key_type key, Args && ... args);
 
 	std::optional<data_type> get(const key_type & key);
+	data_type at(const key_type & key);
+	data_type operator[](const key_type & key);
 
+	void erase(const key_type & key);
 	void clear();
 	void removeExpiredData();
 
@@ -174,6 +177,40 @@ inline std::optional<typename ExpiringMap<T, U, HASHER>::data_type> ExpiringMap<
 	}
 
 	return data;
+}
+
+template<typename T, typename U, typename HASHER>
+inline typename ExpiringMap<T, U, HASHER>::data_type ExpiringMap<T, U, HASHER>::at(const key_type & key)
+{
+	auto data = get(key);
+
+	if (data.has_value())
+	{
+		return data.value();
+	}
+
+	throw std::out_of_range{ "ExpiringMap: key doesn't exist" };
+}
+
+template<typename T, typename U, typename HASHER>
+inline typename ExpiringMap<T, U, HASHER>::data_type ExpiringMap<T, U, HASHER>::operator[](const key_type & key)
+{
+	return at(key);
+}
+
+template<typename T, typename U, typename HASHER>
+inline void ExpiringMap<T, U, HASHER>::erase(const key_type & key)
+{
+	removeExpiredData();
+
+	std::unique_lock<std::mutex> lock{ mx };
+
+	if (data_buffer.count(key))
+	{
+		removeExpirationTime(key);
+		data_buffer.erase(key);
+	}
+
 }
 
 template<typename T, typename U, typename HASHER>
